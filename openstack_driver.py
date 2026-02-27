@@ -21,19 +21,22 @@ class OpenStackManager:
         limits = self.conn.compute.get_limits(project=project.id)
         return limits.absolute 
 
-    def create_vps_with_access(self, instance_name, network_id, image_name, flavor_name, key_name):
+    def create_vps_with_access(self, instance_name, project_id, network_id, image_name, flavor_name, key_name):
         # 인스턴스 생성 후 접속용 Floating IP까지 자동 매핑
         try:
+            # 대상 프로젝트에 대한 프록시 연결 생성 (관리자 권한 필요): 해당 프로젝트의 쿼터와 권한 내에서 생성
+            target_conn = self.conn.connect_as(project_id=project_id)
+            
             # 자원 찾기
-            image = self.conn.compute.find_image(image_name)
-            flavor = self.conn.compute.find_flavor(flavor_name)
+            image = target_conn.compute.find_image(image_name)
+            flavor = target_conn.compute.find_flavor(flavor_name)
             
             # 보안 그룹 생성
             sg_name = f"{instance_name}-sg"
-            sg = self.create_security_group_with_rules(sg_name)
+            sg = self.create_security_group_with_rules_in_project(target_conn, sg_name)
             
             # 서버 생성
-            server = self.conn.compute.create_server(
+            server = target_conn.compute.create_server(
                 name=instance_name,
                 image_id=image.id,
                 flavor_id=flavor.id,
@@ -43,21 +46,23 @@ class OpenStackManager:
             )
             
             # ACTIVE 상태 대기
-            server = self.conn.compute.wait_for_server(server)
+            server = target_conn.compute.wait_for_server(server)
+            print(f"인스턴스 활성화 완료 : {server.id}")
             
             # Floating IP 처리 초기화
             fip_addr = "N/A"
-            ext_nets = list(self.conn.network.networks(name="ext_net"))
+            ext_nets = list(target_conn.network.networks(name="ext_net"))
             
             if ext_nets:
-                ports = list(self.conn.network.ports(device_id=server.id))
+                ports = list(target_conn.network.ports(device_id=server.id))
                 if ports:
                     port_id = ports[0].id
-                    fip = self.conn.network.create_ip(
+                    fip = target_conn.network.create_ip(
                         floating_network_id=ext_nets[0].id,
                         port_id=port_id
                     )
                     fip_addr = fip.floating_ip_address
+                    print(f"Floating IP 연결 완료 : {fip_addr}")
             
             # Fixed IP 추출 (네트워크 이름을 몰라도 첫 번째 사설 IP를 가져옴)
             fixed_ip = "N/A"
@@ -69,26 +74,29 @@ class OpenStackManager:
 
             return {
                 "instance_id": server.id,
+                "project_id": project_id,
                 "fixed_ip": fixed_ip,
-                "floating_ip": fip_addr
+                "floating_ip": fip_addr,
+                "status": "ACTIVE"
             }
         except Exception as e:
-            print(f"[Internal Error] {e}")
+            print(f"[프로젝트별 인스턴스 생성 오류] : {e}")
             raise e
 
-    def create_security_group_with_rules(self, sg_name):
+
+    def create_security_group_with_rules_in_project(self, target_conn, sg_name):
         # 전용 보안 그룹 생성 및 필수 규칙(SSH, ICMP, 9100) 추가
         
         # 기존 보안 그룹 확인
-        existing_sg = self.conn.network.find_security_group(sg_name)
+        existing_sg = target_conn.network.find_security_group(sg_name)
         if existing_sg:
             return existing_sg
         
         # 보안 그룹 생성 및 규칙 추가
         print(f"--- 보안 그룹 {sg_name} 생성 중... ---")
-        sg = self.conn.network.create_security_group(name=sg_name)
+        sg = target_conn.network.create_security_group(name=sg_name)
         
-        self.conn.network.create_security_group_rule(
+        target_conn.network.create_security_group_rule(
             security_group_id=sg.id,
             direction='ingress',
             ethertype='IPv4',
@@ -97,7 +105,7 @@ class OpenStackManager:
             port_range_max=22
         )
         
-        self.conn.network.create_security_group_rule(
+        target_conn.network.create_security_group_rule(
             security_group_id=sg.id,
             direction='ingress',
             ethertype='IPv4',
@@ -105,7 +113,7 @@ class OpenStackManager:
         )
         
         # node-exporter
-        self.conn.network.create_security_group_rule(
+        target_conn.network.create_security_group_rule(
             security_group_id=sg.id,
             direction='ingress',
             ethertype='IPv4',

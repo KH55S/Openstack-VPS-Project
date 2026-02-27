@@ -36,4 +36,6 @@ def add_user(username, project_id, network_id, project_name):
     finally:
         conn.close()
 
+
+# 추후 유저 등록 시 프로젝트와 네트워크까지 등록되게 수정 예정
 add_user("KHS_admin", "f3b4f0ad1ded48b48533c70d095055c6", "31b7198f-8093-449a-8ef9-f979f3a0fbca", "KHS_Project")

@@ -9,6 +9,7 @@ packer {
 
 source "openstack" "ubuntu_vps" {
   cloud           = "my-openstack"
+  tenant_id	  = "Project_A"
   image_name      = "ubuntu-22.04-monitoring-v1"
   source_image    = "57d47e9f-ff9a-42c9-ad77-2e268989fe9e"
   flavor          = "m1.small"

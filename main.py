@@ -64,6 +64,7 @@ async def create_instance(name: str, username: str):
     try:
         result = manager.create_vps_with_access(
             instance_name=name,
+            project_id=user['project_id'],
             network_id=user['network_id'],
             image_name="ubuntu-22.04-monitoring-v1", # 추후 여러 OS 선택 가능하도록 업데이트
             flavor_name="m1.small",
