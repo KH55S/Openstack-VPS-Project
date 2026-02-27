@@ -143,7 +143,7 @@
         // 1. 유저 목록 가져오기 (DB 연동)
         async function fetchUsers() {
             try {
-                const response = await fetch('http://localhost:8000/api/users');
+                const response = await fetch('/api/users');
                 const users = await response.json();
                 const select = document.getElementById('user-select');
                 
@@ -160,7 +160,7 @@
         // 2. 대시보드 리스트 및 차트 갱신
         async function fetchDashboard() {
             try {
-                const response = await fetch('http://localhost:8000/api/dashboard');
+                const response = await fetch('/api/dashboard');
                 const data = await response.json();
                 
                 const list = document.getElementById('instance-list');
@@ -238,7 +238,7 @@
 
             try {
                 // 백엔드 POST /api/instances 호출
-                const response = await fetch(`http://localhost:8000/api/instances?name=${encodeURIComponent(name)}&username=${encodeURIComponent(username)}`, {
+                const response = await fetch(`/api/instances?name=${encodeURIComponent(name)}&username=${encodeURIComponent(username)}`, {
                     method: 'POST'
                 });
                 const result = await response.json();
@@ -262,7 +262,7 @@
         async function deleteInstance(id) {
             if(!confirm("정말로 이 인스턴스를 삭제하시겠습니까? (연결된 Floating IP 및 보안그룹이 함께 정리됩니다.)")) return;
             try {
-                const response = await fetch(`http://localhost:8000/api/instances/destroy/${id}`, { method: 'DELETE' });
+                const response = await fetch(`/api/instances/destroy/${id}`, { method: 'DELETE' });
                 
                 if(response.ok) {
                     alert("삭제 요청이 전달되었습니다.");

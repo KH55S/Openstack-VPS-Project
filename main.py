@@ -12,7 +12,13 @@ app = FastAPI(title="KHS Private Cloud Portal")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=[
+        "https://hcloud.khs-server.cloud",
+        "http://localhost:8000",    # 로컬 테스트용
+        "http://localhost:8070",
+        "http://192.168.35.100:8070"
+    ],
+    allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )

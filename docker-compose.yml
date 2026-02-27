@@ -1,0 +1,11 @@
+services:
+  hcloud-dashboard:
+    image: hcloud-dashboard:latest
+    container_name: hcloud-portal
+    network_mode: "host"
+    volumes:
+      - ./cloud_portal.db:/app/cloud_portal.db
+      - ~/.config/openstack:/root/.config/openstack:ro
+    environment:
+      - TZ=Asia/Seoul
+    restart: always

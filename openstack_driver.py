@@ -20,7 +20,7 @@ class OpenStackManager:
         # 사용량 요약 기능을 위한 데이터 소스
         project = self.conn.identity.find_project(project_name)
         limits = self.conn.compute.get_limits(project=project.id)
-        return limits.absolute 
+        return limits.absolute
 
     def create_vps_with_access(self, instance_name, project_id, network_id, image_name, flavor_name, key_name):
         # 인스턴스 생성 후 접속용 Floating IP까지 자동 매핑
@@ -261,7 +261,7 @@ class OpenStackManager:
                 external_gateway_info={"network_id": ext_net.id}
             )
             
-            # 라루터와 서브넷 연결 (인터페이스 추가)
+            # 라우터와 서브넷 연결 (인터페이스 추가)
             self.conn.network.add_interface_to_router(
                 router.id,
                 subnet_id=subnet.id
