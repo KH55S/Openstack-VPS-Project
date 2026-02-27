@@ -28,7 +28,7 @@ async def read_index():
 @app.get("/api/users")
 async def get_users():
     try:
-        conn = sqlite3.connect(DB_PATH) # 정의된 DB_PATH 사용
+        conn = sqlite3.connect(DB_PATH)
         conn.row_factory = sqlite3.Row
         cursor = conn.cursor()
         users = cursor.execute('SELECT username, project_name FROM users').fetchall()
@@ -85,5 +85,14 @@ async def create_instance(name: str, username: str):
             key_name="khs-main-keypair"
         )
         return {"status": "success", "message": "Instance creation started", "data": result}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    
+    
+@app.delete("/api/instances/destroy/{instance_id}")
+async def delete_instance(instance_id: str):
+    try:
+        manager.delete_instance(instance_id)
+        return {"status": "success", "message": "Instance deletion complete"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

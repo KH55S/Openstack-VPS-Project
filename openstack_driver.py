@@ -178,6 +178,43 @@ class OpenStackManager:
         except Exception as e:
             print(f"Dashboard 데이터 통합 중 오류 발생 : {e}")
             return []
+        
+        
+    def delete_instance(self, instance_id):
+        try:
+            server = self.conn.compute.get_server(instance_id)
+            project_id = server.project_id
+            instance_name = server.name
+            sg_name = f"{instance_name}-sg"
+            
+            target_conn = self.conn.connect_as(project_id=project_id)
+            
+            # floating IP 정리
+            ports = list(target_conn.network.ports(device_id=instance_id))
+            for port in ports:
+                fips = list(target_conn.network.ips(port_id=port.id))
+                for fip in fips:
+                    print(f"Floating IP 제거 중 : {fip.floating_ip_address}")
+                    target_conn.network.delete_ip(fip.id)
+                    
+            # 인스턴스 삭제
+            print(f"인스턴스 삭제 요청 : {instance_id}")
+            target_conn.compute.delete_server(instance_id)
+            
+            # 보안그룹 삭제 전 인스턴스 삭제 대기
+            target_conn.compute.wait_for_delete(server, wait=25)
+            
+            # 보안그룹 삭제
+            sg = target_conn.network.find_security_group(sg_name)
+            if sg:
+                print(f"인스턴스와 연결된 보안그룹 삭제 중 : {sg_name}")
+                target_conn.network.delete_security_group(sg.id)
+                print("[ 모든 자원 정리 완료] ")
+                
+            return True
+        except Exception as e:
+            print(f"인스턴스 삭제 오류 : {e}")
+            raise e
 
 
 '''
