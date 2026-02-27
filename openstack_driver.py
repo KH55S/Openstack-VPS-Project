@@ -217,6 +217,69 @@ class OpenStackManager:
             raise e
 
 
+    def setup_tenant_infrastructure(self, username):
+        # 신규 유저를 위한 프로젝트/네트워크/서브넷/라우터 생성
+        try:
+            print(f"{username}을 위한 테넌트 인프라 구축")
+            
+            # 프로젝트 생성
+            project_name = f"{username}_Project"
+            project = self.conn.identity.create_project(
+                name=project_name,
+                description=f"Project for {username}",
+                domain_id="default"
+            )
+            project_id = project.id
+            
+            # 네트워크 생성
+            net_name = f"{username}_net"
+            network = self.conn.network.create_network(
+                name=net_name,
+                project_id=project_id
+            )
+            network_id = network.id
+            
+            # 서브넷 생성
+            subnet_name = f"{username}_subnet"
+            subnet = self.conn.network.create_subnet(
+                name=subnet_name,
+                network_id=network_id,
+                project_id=project_id,
+                ip_version=4,
+                cidr="10.0.0.0/24",
+                gateway_ip="10.0.0.1",
+                dns_nameservers=["8.8.8.8"]
+            )
+            
+            # 라우터 생성 및 외부망 게이트웨이 설정
+            router_name = f"{username}_router"
+            ext_net = self.conn.network.find_network("ext_net")
+            
+            router = self.conn.network.create_router(
+                name=router_name,
+                project_id=project_id,
+                external_gateway_info={"network_id": ext_net.id}
+            )
+            
+            # 라루터와 서브넷 연결 (인터페이스 추가)
+            self.conn.network.add_interface_to_router(
+                router.id,
+                subnet_id=subnet.id
+            )
+            
+            print(f"{username} 인프라 구축 완료 (Project: {project_id})")
+            
+            return {
+                "project_id": project_id,
+                "network_id": network_id,
+                "project_name": project_name
+            }
+            
+        except Exception as e:
+            print(f"인프라 자동 구축 실패 : {e}")
+            raise e
+            
+
 '''
 # 인스턴스 생성 후 floating ip 할당 테스트
 # create_vps_with_access 테스트

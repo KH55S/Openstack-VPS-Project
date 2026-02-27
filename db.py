@@ -1,4 +1,5 @@
 import sqlite3
+from openstack_driver import OpenStackManager
 
 def init_db():
     conn = sqlite3.connect('cloud_portal.db')
@@ -21,7 +22,6 @@ def init_db():
 #init_db()
 
 # 사용자 등록 스크립트
-
 def add_user(username, project_id, network_id, project_name):
     conn = sqlite3.connect('cloud_portal.db')
     cursor = conn.cursor()
@@ -37,5 +37,32 @@ def add_user(username, project_id, network_id, project_name):
         conn.close()
 
 
-# 추후 유저 등록 시 프로젝트와 네트워크까지 등록되게 수정 예정
-add_user("KHS_admin", "f3b4f0ad1ded48b48533c70d095055c6", "31b7198f-8093-449a-8ef9-f979f3a0fbca", "KHS_Project")
+# DB에 유저를 등록할 때 마다 프로젝트/네트워크/서브넷/라우터 구성을 수동으로 해야한다
+# 유저 등록 시 프로젝트와 네트워크까지 등록되게 수정
+#add_user("KHS_admin", "f3b4f0ad1ded48b48533c70d095055c6", "31b7198f-8093-449a-8ef9-f979f3a0fbca", "KHS_Project")
+
+
+def register_new_user(username):
+    manager = OpenStackManager()
+    conn = sqlite3.connect('cloud_portal.db')
+    cursor = conn.cursor()
+    
+    try:
+        infra = manager.setup_tenant_infrastructure(username)
+        
+        cursor.execute('''
+            INSERT INTO users (username, project_id, network_id, project_name)
+            VALUES (?, ?, ?, ?)               
+        ''', (username, infra['project_id'], infra['network_id'], infra['project_name']))
+        
+        conn.commit()
+        print(f"{username} 유저 및 인프라 등록 완료")
+        
+    except Exception as e:
+        print(f"유저 등록 실패 : {e}")
+        conn.rollback()
+    finally:
+        conn.close()
+
+if __name__ == "__main__":
+    register_new_user("K8s_User")
