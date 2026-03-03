@@ -70,7 +70,7 @@ async def get_dashboard():
 @app.post("/api/instances")
 async def create_instance(name: str, username: str):
     # DB에서 유저의 오픈스택 컨텍스트 조회
-    conn = sqlite3.connect('cloud_portal.db')
+    conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
     cursor = conn.cursor()
     user = cursor.execute('SELECT * FROM users WHERE username = ?', (username,)).fetchone()
@@ -88,7 +88,7 @@ async def create_instance(name: str, username: str):
             network_id=user['network_id'],
             image_name="ubuntu-22.04-monitoring-v1", # 추후 여러 OS 선택 가능하도록 업데이트
             flavor_name="m1.small",
-            key_name="khs-main-keypair"
+            key_name=user['key_name'] # 해당 사용자 전용 키페어를 사용
         )
         return {"status": "success", "message": "Instance creation started", "data": result}
     except Exception as e:
@@ -102,3 +102,28 @@ async def delete_instance(instance_id: str):
         return {"status": "success", "message": "Instance deletion complete"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+    
+
+# SSH 접속을 위해 ./user_keys/ 폴더에 저장된 유저의 .pem파일 다운로드
+@app.get("/api/keys/download/{username}")
+async def download_private_key(username: str):
+    # DB에서 해당 유저의 key_name 확인
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
+    user = conn.execute('SELECT key_name FROM users WHERE username = ?', (username,)).fetchone()
+    conn.close()
+    
+    if not user or not user['key_name']:
+        raise HTTPException(status_code=404, detail="키페어 정보를 찾을 수 없습니다.")
+    
+    key_filename = f"{user['key_name']}.pem"
+    key_path = os.path.join(BASE_DIR, "user_keys", key_filename)
+    
+    if not os.path.exists(key_path):
+        raise HTTPException(status_code=404, detail="키 파일을 찾을 수 없습니다.")
+    
+    return FileResponse(
+        path=key_path,
+        filename=key_filename,
+        media_type='application/x-pem-file'
+    )

@@ -15,9 +15,19 @@
 <body class="bg-gray-900 text-white p-6 md:p-10">
 
     <div class="max-w-6xl mx-auto">
-        <div class="flex justify-between items-center mb-10">
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 gap-4">
             <div>
                 <h1 class="text-3xl font-bold text-blue-400 tracking-tight">HCloud Infra</h1>
+                <div class="mt-2 flex items-center gap-3">
+                    <span class="text-sm text-gray-500">View Project:</span>
+                    <select id="view-filter" onchange="fetchDashboard()" class="bg-gray-800 border border-gray-700 text-sm rounded-lg px-3 py-1.5 focus:ring-blue-500 focus:border-blue-500 outline-none">
+                        <option value="all">전체 인프라 보기</option>
+                    </select>
+                    <button id="key-download-btn" onclick="downloadMyKey()" class="hidden bg-gray-700 hover:bg-gray-600 text-xs font-bold px-3 py-1.5 rounded transition flex items-center gap-1">
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                        SSH Key (.pem)
+                    </button>
+                </div>
             </div>
             <button onclick="openModal()" class="bg-blue-600 hover:bg-blue-700 px-6 py-2.5 rounded-lg font-bold shadow-lg shadow-blue-900/20 transition-all active:scale-95">
                 + 새 인스턴스 배포
@@ -26,15 +36,15 @@
 
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
             <div class="bg-gray-800 p-6 rounded-xl border border-gray-700 shadow-xl">
-                <p class="text-gray-400 text-sm font-medium mb-1">전체 활성 인스턴스</p>
+                <p class="text-gray-400 text-sm font-medium mb-1">인스턴스 현황</p>
                 <p id="total-instances" class="text-3xl font-bold">0 <span class="text-lg text-gray-500 font-normal">/ 10</span></p>
             </div>
             <div class="bg-gray-800 p-6 rounded-xl border border-gray-700 shadow-xl">
-                <p class="text-gray-400 text-sm font-medium mb-1">리소스 사용 프로젝트</p>
-                <p id="active-projects" class="text-3xl font-bold">0</p>
+                <p class="text-gray-400 text-sm font-medium mb-1">현재 프로젝트</p>
+                <p id="active-projects" class="text-3xl font-bold">-</p>
             </div>
             <div class="bg-gray-800 p-6 rounded-xl border border-gray-700 shadow-xl border-l-4 border-l-blue-500">
-                <p class="text-gray-400 text-sm font-medium mb-1">인프라 상태</p>
+                <p class="text-gray-400 text-sm font-medium mb-1">네트워크 상태</p>
                 <p class="text-2xl font-bold text-blue-400">Stable</p>
             </div>
         </div>
@@ -51,13 +61,12 @@
                             <th class="p-4">소유자 (프로젝트)</th>
                             <th class="p-4">인스턴스 이름</th>
                             <th class="p-4">상태</th>
-                            <th class="p-4">IP 주소 (Internal/Floating)</th>
+                            <th class="p-4">IP 주소 (Int/Ext)</th>
                             <th class="p-4">CPU (%)</th>
                             <th class="p-4 text-center">작업</th>
                         </tr>
                     </thead>
-                    <tbody id="instance-list" class="divide-y divide-gray-700">
-                        </tbody>
+                    <tbody id="instance-list" class="divide-y divide-gray-700"></tbody>
                 </table>
             </div>
         </div>
@@ -65,7 +74,7 @@
         <div class="mt-10 bg-gray-800 p-6 rounded-xl border border-gray-700 shadow-xl">
             <h2 class="text-xl font-bold mb-6 flex items-center">
                 <svg class="w-5 h-5 mr-2 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>
-                전체 인프라 CPU 부하 추이
+                인프라 부하 추이
             </h2>
             <div class="h-64">
                 <canvas id="cpuChart"></canvas>
@@ -85,15 +94,11 @@
             <div class="space-y-5">
                 <div>
                     <label class="block text-sm font-medium text-gray-400 mb-2">인스턴스 명칭</label>
-                    <input type="text" id="new-inst-name" class="w-full bg-gray-900 border border-gray-700 p-3 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition" placeholder="예: web-server-01">
+                    <input type="text" id="new-inst-name" class="w-full bg-gray-900 border border-gray-700 p-3 rounded-lg text-white outline-none focus:ring-2 focus:ring-blue-500 transition" placeholder="예: web-server-01">
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-400 mb-2">대상 사용자 및 테넌트</label>
-                    <select id="user-select" class="w-full bg-gray-900 border border-gray-700 p-3 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition">
-                        </select>
-                    <p class="text-[11px] text-gray-500 mt-2 px-1 leading-relaxed">
-                        💡 선택한 사용자의 **VXLAN 가상 네트워크**에 독립적으로 배포되며, L2 Isolation이 자동으로 적용됩니다.
-                    </p>
+                    <select id="user-select" class="w-full bg-gray-900 border border-gray-700 p-3 rounded-lg text-white outline-none focus:ring-2 focus:ring-blue-500 transition"></select>
                 </div>
                 
                 <div class="pt-4 flex gap-3">
@@ -109,73 +114,68 @@
         const ctx = document.getElementById('cpuChart').getContext('2d');
         const cpuChart = new Chart(ctx, {
             type: 'line',
-            data: {
-                labels: [],
-                datasets: [{
-                    label: '평균 CPU 사용률 (%)',
-                    data: [],
-                    borderColor: '#3b82f6',
-                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                    borderWidth: 3,
-                    fill: true,
-                    tension: 0.4,
-                    pointRadius: 2
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                scales: { 
-                    y: { beginAtZero: true, max: 100, grid: { color: '#374151' } },
-                    x: { grid: { display: false } }
-                },
-                plugins: { legend: { display: false } }
-            }
+            data: { labels: [], datasets: [{ label: 'CPU 사용률 (%)', data: [], borderColor: '#3b82f6', backgroundColor: 'rgba(59, 130, 246, 0.1)', borderWidth: 3, fill: true, tension: 0.4, pointRadius: 2 }] },
+            options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, max: 100, grid: { color: '#374151' } }, x: { grid: { display: false } } }, plugins: { legend: { display: false } } }
         });
 
-        // --- 초기화 및 대시보드 데이터 로드 ---
+        // --- 초기화 ---
         window.onload = async () => {
             await fetchUsers();
             await fetchDashboard();
-            setInterval(fetchDashboard, 10000); // 10초 주기
+            setInterval(fetchDashboard, 10000); 
         };
 
-        // 1. 유저 목록 가져오기 (DB 연동)
+        // 1. 유저 목록 가져오기 (필터 및 모달 동시 적용)
         async function fetchUsers() {
             try {
                 const response = await fetch('/api/users');
                 const users = await response.json();
-                const select = document.getElementById('user-select');
                 
-                if(users.length > 0) {
-                    select.innerHTML = users.map(u => 
-                        `<option value="${u.username}">${u.username} (${u.project_name})</option>`
-                    ).join('');
-                } else {
-                    select.innerHTML = '<option value="">사용 가능한 프로젝트 없음</option>';
-                }
+                const filter = document.getElementById('view-filter');
+                const modalSelect = document.getElementById('user-select');
+                
+                const options = users.map(u => `<option value="${u.username}">${u.username}</option>`).join('');
+                
+                // 상단 필터에 유저 추가
+                filter.innerHTML = `<option value="all">전체 인프라 보기</option>` + options;
+                // 모달 선택창에 유저 추가
+                modalSelect.innerHTML = options;
+
             } catch (e) { console.error("User Load Error:", e); }
         }
 
-        // 2. 대시보드 리스트 및 차트 갱신
+        // 2. 대시보드 데이터 로드 (필터링 로직 포함)
         async function fetchDashboard() {
             try {
                 const response = await fetch('/api/dashboard');
-                const data = await response.json();
+                const allData = await response.json();
                 
+                const selectedUser = document.getElementById('view-filter').value;
+                const downloadBtn = document.getElementById('key-download-btn');
+                
+                // 데이터 필터링
+                const data = selectedUser === 'all' 
+                    ? allData 
+                    : allData.filter(inst => inst.owner === selectedUser);
+
+                // UI 업데이트 (키 다운로드 버튼 노출 여부)
+                if(selectedUser !== 'all') {
+                    downloadBtn.classList.remove('hidden');
+                    document.getElementById('active-projects').innerText = selectedUser;
+                } else {
+                    downloadBtn.classList.add('hidden');
+                    const uniqueProjects = new Set(allData.map(inst => inst.project_id));
+                    document.getElementById('active-projects').innerText = uniqueProjects.size;
+                }
+
                 const list = document.getElementById('instance-list');
                 list.innerHTML = '';
                 
                 let totalCpu = 0;
                 let count = 0;
-                const uniqueProjects = new Set();
 
                 data.forEach(inst => {
-                    if (inst.cpu !== 'No Data') {
-                        totalCpu += parseFloat(inst.cpu);
-                        count++;
-                    }
-                    if(inst.project_id) uniqueProjects.add(inst.project_id);
+                    if (inst.cpu !== 'No Data') { totalCpu += parseFloat(inst.cpu); count++; }
 
                     list.innerHTML += `
                         <tr class="hover:bg-gray-700/30 transition-colors">
@@ -209,15 +209,11 @@
                 });
 
                 document.getElementById('total-instances').innerText = `${data.length} / 10`;
-                document.getElementById('active-projects').innerText = uniqueProjects.size;
 
-                // 차트 업데이트
+                // 차트 업데이트 (필터링된 자원 기준)
                 const avgCpu = count > 0 ? (totalCpu / count).toFixed(2) : 0;
                 const now = new Date().toLocaleTimeString();
-                if (cpuChart.data.labels.length > 12) {
-                    cpuChart.data.labels.shift();
-                    cpuChart.data.datasets[0].data.shift();
-                }
+                if (cpuChart.data.labels.length > 12) { cpuChart.data.labels.shift(); cpuChart.data.datasets[0].data.shift(); }
                 cpuChart.data.labels.push(now);
                 cpuChart.data.datasets[0].data.push(avgCpu);
                 cpuChart.update();
@@ -225,58 +221,36 @@
             } catch (error) { console.error("Dashboard Sync Error:", error); }
         }
 
-        // 3. 인스턴스 배포 요청
+        // 3. 키 다운로드 함수
+        function downloadMyKey() {
+            const username = document.getElementById('view-filter').value;
+            if (username === 'all') return;
+            window.location.href = `/api/keys/download/${username}`;
+        }
+
+        // 4. 인스턴스 배포 및 삭제
         async function submitCreate() {
             const name = document.getElementById('new-inst-name').value;
             const username = document.getElementById('user-select').value;
             const btn = document.getElementById('submit-btn');
-            
             if(!name) return alert("인스턴스 명칭을 입력하세요.");
-
-            btn.innerText = "리소스 할당 중...";
-            btn.disabled = true;
-
+            btn.innerText = "배포 중..."; btn.disabled = true;
             try {
-                // 백엔드 POST /api/instances 호출
-                const response = await fetch(`/api/instances?name=${encodeURIComponent(name)}&username=${encodeURIComponent(username)}`, {
-                    method: 'POST'
-                });
-                const result = await response.json();
-                
-                if(response.ok && result.status === "success") {
-                    alert(`성공: ${username} 테넌트의 격리 네트워크에 배포되었습니다.`);
-                    closeModal();
-                    fetchDashboard();
-                } else {
-                    throw new Error(result.detail || "오픈스택 자원 부족 또는 통신 오류");
-                }
-            } catch (e) {
-                alert("배포 실패: " + e.message);
-            } finally {
-                btn.innerText = "배포 시작";
-                btn.disabled = false;
-            }
+                const res = await fetch(`/api/instances?name=${encodeURIComponent(name)}&username=${encodeURIComponent(username)}`, { method: 'POST' });
+                if(res.ok) { alert("배포 성공!"); closeModal(); fetchDashboard(); } 
+                else { const err = await res.json(); alert("실패: " + err.detail); }
+            } catch (e) { alert("오류: " + e); }
+            finally { btn.innerText = "배포 시작"; btn.disabled = false; }
         }
 
-        // 4. 인스턴스 삭제
         async function deleteInstance(id) {
-            if(!confirm("정말로 이 인스턴스를 삭제하시겠습니까? (연결된 Floating IP 및 보안그룹이 함께 정리됩니다.)")) return;
+            if(!confirm("정말 삭제하시겠습니까?")) return;
             try {
-                const response = await fetch(`/api/instances/destroy/${id}`, { method: 'DELETE' });
-                
-                if(response.ok) {
-                    alert("삭제 요청이 전달되었습니다.");
-                    fetchDashboard();
-                } else {
-                    const err = await response.json();
-                    alert("삭제 실패 : " + err.detail);
-                }
-            } catch (e) { 
-                alert("통신 오류 : " + e); 
-            }
+                const res = await fetch(`/api/instances/destroy/${id}`, { method: 'DELETE' });
+                if(res.ok) { alert("삭제 요청 완료"); fetchDashboard(); }
+            } catch (e) { alert("통신 오류"); }
         }
 
-        // 모달 제어
         function openModal() { document.getElementById('create-modal').classList.remove('hidden'); }
         function closeModal() { document.getElementById('create-modal').classList.add('hidden'); }
     </script>
