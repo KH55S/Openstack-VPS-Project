@@ -218,7 +218,7 @@ class OpenStackManager:
 
 
     def setup_tenant_infrastructure(self, username):
-        # 신규 유저를 위한 프로젝트/네트워크/서브넷/라우터 생성
+        # 신규 유저를 위한 프로젝트/네트워크/서브넷/라우터 생성 + 키 페어
         try:
             print(f"{username}을 위한 테넌트 인프라 구축")
             
@@ -267,12 +267,18 @@ class OpenStackManager:
                 subnet_id=subnet.id
             )
             
+            # 키 페어 생성
+            key_name = f"{username}_key"
+
+            keypair = self.conn.compute.create_keypair(name=key_name)
             print(f"{username} 인프라 구축 완료 (Project: {project_id})")
             
             return {
                 "project_id": project_id,
                 "network_id": network_id,
-                "project_name": project_name
+                "project_name": project_name,
+                "key_name": key_name,
+                "private_key": keypair.private_key
             }
             
         except Exception as e:

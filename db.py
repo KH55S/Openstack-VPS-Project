@@ -42,27 +42,20 @@ def add_user(username, project_id, network_id, project_name):
 #add_user("KHS_admin", "f3b4f0ad1ded48b48533c70d095055c6", "31b7198f-8093-449a-8ef9-f979f3a0fbca", "KHS_Project")
 
 
-def register_new_user(username):
-    manager = OpenStackManager()
+
+# DB 스키마 수정
+def update_db_schema():
     conn = sqlite3.connect('cloud_portal.db')
     cursor = conn.cursor()
-    
     try:
-        infra = manager.setup_tenant_infrastructure(username)
-        
         cursor.execute('''
-            INSERT INTO users (username, project_id, network_id, project_name)
-            VALUES (?, ?, ?, ?)               
-        ''', (username, infra['project_id'], infra['network_id'], infra['project_name']))
-        
+            ALTER TABLE users ADD COLUMN key_name TEXT;
+        ''')
         conn.commit()
-        print(f"{username} 유저 및 인프라 등록 완료")
-        
-    except Exception as e:
-        print(f"유저 등록 실패 : {e}")
-        conn.rollback()
+    except sqlite3.OperationalError:
+        print("이미 컬럼이 존재합니다.")
     finally:
         conn.close()
-
-if __name__ == "__main__":
-    register_new_user("K8s_User")
+    
+    
+update_db_schema()

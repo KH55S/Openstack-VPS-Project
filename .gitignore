@@ -9,6 +9,8 @@ test.py
 clouds.yaml
 clouds.yaml
 
+user_keys/
+
 # db
 *.db
 cloud_portal.db
