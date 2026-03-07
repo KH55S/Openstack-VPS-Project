@@ -39,7 +39,7 @@ ssh -i [본인_키_이름].pem ubuntu@192.168.35.xxx
 ```
 
 ## HCloud Infra 대시보드 구성
-![메인 화면](https://img1.daumcdn.net/thumb/R1280x0.fjpg/?fname=http://t1.daumcdn.net/brunch/service/user/3fuW/image/sCtCeqMtmYJKDf7uLKA3EsaDhD8.jpg)
+<img width="1298" height="1687" alt="screencapture-hcloud-khs-server-cloud-2026-03-07-20_31_34" src="https://github.com/user-attachments/assets/7c63010a-6ad3-4663-99d4-80809d0a6508" />
 - 대시보드 접속 시 전체 프로젝트 내에서 생성된 모든 인스턴스가 표시되고, 세부정보는 아래와 같습니다.
   - 각 인스턴스의 기본 정보 : 프로젝트 / 인스턴스 이름 / 상태 / IP 주소 (내부/외부)
   - 모니터링 :  (내부/외부) / CPU, Memory, Disk I/O 사용량
@@ -50,8 +50,10 @@ ssh -i [본인_키_이름].pem ubuntu@192.168.35.xxx
     - 할당되지 않은 Floating IP
     - 할당되지 않은 볼륨
 ---
-![호스트 모니터링](https://img1.daumcdn.net/thumb/R1280x0.fjpg/?fname=http://t1.daumcdn.net/brunch/service/user/3fuW/image/sCtCeqMtmYJKDf7uLKA3EsaDhD8.jpg)
+<img width="1197" height="1096" alt="스크린샷 2026-03-07 203301" src="https://github.com/user-attachments/assets/c5dfc43d-e7f8-4663-bebb-257b33cc7ad5" />
 - 오픈스택 인프라가 구성된 호스트 서버의 모니터링 지표가 표시됩니다.
 
-![프로젝트별 인스턴스 관리](https://img1.daumcdn.net/thumb/R1280x0.fjpg/?fname=http://t1.daumcdn.net/brunch/service/user/3fuW/image/sCtCeqMtmYJKDf7uLKA3EsaDhD8.jpg)
+<img width="1199" height="960" alt="스크린샷 2026-03-07 211650" src="https://github.com/user-attachments/assets/8c7536db-c330-4fdd-b9d6-cfb4c5f9a753" />
 - 상단 View Project 필터를 통해 특정 프로젝트를 선택해 인스턴스 정보를 확인할 수 있습니다.
+
+
