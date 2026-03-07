@@ -1,0 +1,20 @@
+---
+- name: OpenStack Instance Post-Deployment Setup
+  hosts: openstack_nodes
+  become: yes
+  tasks:
+    - name: 1. 패키지 리스트 업데이트 및 업그레이드
+      apt:
+        update_cache: yes
+        upgrade: dist
+        autoremove: yes
+
+    - name: 2. OS 내부 호스트네임 설정 (DB 이름과 동기화)
+      hostname:
+        name: "{{ target_hostname }}"
+
+    - name: 3. /etc/hosts 파일에 호스트네임 반영
+      lineinfile:
+        path: /etc/hosts
+        regexp: '^127.0.1.1'
+        line: "127.0.1.1 {{ target_hostname }}"

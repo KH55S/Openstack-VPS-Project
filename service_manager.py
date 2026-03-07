@@ -2,7 +2,7 @@ import os
 import sqlite3
 from openstack_driver import OpenStackManager
 
-
+# 신규 유저(프로젝트) 등록
 def register_new_user(username):
     manager = OpenStackManager()
     conn = sqlite3.connect('cloud_portal.db')
@@ -38,4 +38,4 @@ def register_new_user(username):
 
 
 if __name__ == "__main__":
-    register_new_user("Test_User")
+    register_new_user("Ansible-User")

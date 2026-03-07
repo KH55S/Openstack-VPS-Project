@@ -1,9 +1,12 @@
+from openstack_driver import OpenStackManager
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from openstack_driver import OpenStackManager
 from fastapi.responses import FileResponse
+from fastapi import BackgroundTasks
 import sqlite3
 import os
+import time
+import subprocess
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DB_PATH = os.path.join(BASE_DIR, "cloud_portal.db")
@@ -67,17 +70,42 @@ async def get_dashboard():
         raise HTTPException(status_code=500, detail=str(e))
     
 
+# 앤서블 실행 담당 함수
+def run_ansible_setup(instance_name: str):
+    # 인스턴스가 ACTIVE여도 SSH 서비스가 뜰 수 있도록 대기
+    time.sleep(10)
+    
+    try:
+        # --limit 옵션으로 생성된 인스턴스만 타겟
+        cmd = [
+            "ansible-playbook",
+            "-i", "inventory.py",
+            "init_setup.yaml",
+            "--limit", instance_name
+        ]
+        
+        result = subprocess.run(cmd, capture_output=True, text=True)
+        
+        if result.returncode == 0:
+            print(f" Ansible Success : [{instance_name}] 초기 설정 완료")
+        else:
+            print(f"Ansible Fail : [{instance_name}] 초기 설정 실패 : {result.stderr}")
+        
+    except Exception as e:
+        print(f"Ansbile 실행 중 오류 발생 : {e}")
+
+
 @app.post("/api/instances")
-async def create_instance(name: str, username: str):
+async def create_instance(name: str, username: str, background_tasks: BackgroundTasks):
     # DB에서 유저의 오픈스택 컨텍스트 조회
     conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
     cursor = conn.cursor()
     user = cursor.execute('SELECT * FROM users WHERE username = ?', (username,)).fetchone()
-    conn.close()
     
     if not user:
-        raise HTTPException(status_code=404, detail="등록되지 않은 사용자 입니다.")
+        conn.close()
+        raise HTTPException(status_code=404, detail="등록되지 않은 사용자입니다.")
     
     # 조회된 유저 고유의 network_id로 인스턴스 생성
     # network_id : OVS에서 특정 VNI로 캡슐화되는 기준
@@ -90,7 +118,22 @@ async def create_instance(name: str, username: str):
             flavor_name="m1.small",
             key_name=user['key_name'] # 해당 사용자 전용 키페어를 사용
         )
-        return {"status": "success", "message": "Instance creation started", "data": result}
+        
+        # 생성된 인스턴스 정보를 instances 테이블에 Insert
+        new_instance_id = result['instance_id']
+        
+        cursor.execute('''
+            INSERT INTO instances (instance_id, instance_name, username)
+            VALUES (?, ?, ?)
+            ''', (new_instance_id, name, username))
+        conn.commit()
+        conn.close()
+        
+        # 백그라운드 테스트로 앤서블 실행 예약
+        background_tasks.add_task(run_ansible_setup, name)
+        
+        return {"status": "success", "message": "Instance created. DB sync completed. Setup starting in background", "data": result}
+    
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
     

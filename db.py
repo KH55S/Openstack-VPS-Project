@@ -6,12 +6,13 @@ def init_db():
     cursor = conn.cursor()
     
     cursor.execute('''
-       CREATE TABLE IF NOT EXISTS users (
-           id INTEGER PRIMARY KEY AUTOINCREMENT,
-           username TEXT UNIQUE,
-           project_id TEXT,
-           network_id TEXT,
-           project_name TEXT
+       CREATE TABLE instances (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            instance_id TEXT NOT NULL,
+            instance_name TEXT NOT NULL,
+            username TEXT NOT NULL,
+            status TEXT DEFAULT 'ACTIVE',
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP
        ) 
     ''')
     
@@ -19,7 +20,7 @@ def init_db():
     conn.close()
     
     
-#init_db()
+init_db()
 
 # 사용자 등록 스크립트
 def add_user(username, project_id, network_id, project_name):
@@ -58,4 +59,4 @@ def update_db_schema():
         conn.close()
     
     
-update_db_schema()
+#update_db_schema()
