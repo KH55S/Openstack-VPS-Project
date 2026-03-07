@@ -2,7 +2,7 @@ import openstack
 import requests
 import time
 from openstack.connection import Connection
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 
 class OpenStackManager:
     # clouds.yaml을 사용하여 인증 정보 외부화
@@ -335,3 +335,43 @@ class OpenStackManager:
                 print(f"Query Error ({key}): {e}")
                 results[key] = "Error"
         return results
+    
+    
+    def get_cleanup_candidates(self, db_instance_ids):
+        cleanup_list = []
+        now = datetime.now(timezone.utc)
+        
+        # 모든 인스턴스 조회 (유령 자원 및 12시간 경과 체크)
+        all_servers = list(self.conn.compute.servers(all_projects=True))
+        
+        for server in all_servers:
+            raw_time = server.created_at
+            
+            # 오픈스택의 생성 시간 파싱 (보통 ISO 형식)
+            # '2026-03-07T08:47:09Z' -> datetime 객체로 변환
+            created_at = datetime.fromisoformat(raw_time.replace('Z', '+00:00'))
+            is_old = (now - created_at) > timedelta(hours=1)
+            is_orphaned = server.id not in db_instance_ids
+            
+            if is_old or is_orphaned:
+                cleanup_list.append({
+                    "type": "Instance",
+                    "id": server.id,
+                    "name": server.name,
+                    "reason": "12시간 경과" if is_old else "유령 리소스(DB 미등록)",
+                    "created_at": raw_time # 오픈스택 기준 시간
+                })
+
+        # 미사용 Floating IP 조회
+        all_fips = list(self.conn.network.ips())
+        for fip in all_fips:
+            if not fip.port_id: # 연결된 장치가 없으면 낭비되는 자원
+                cleanup_list.append({
+                    "type": "Floating IP",
+                    "id": fip.id,
+                    "name": fip.floating_ip_address,
+                    "reason": "미사용 IP (Unattached)",
+                    "created_at": "N/A"
+                })
+                
+        return cleanup_list

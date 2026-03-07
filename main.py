@@ -7,6 +7,7 @@ import sqlite3
 import os
 import time
 import subprocess
+import traceback
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DB_PATH = os.path.join(BASE_DIR, "cloud_portal.db")
@@ -175,3 +176,19 @@ async def download_private_key(username: str):
 @app.get("/api/host-metrics")
 async def host_metrics():
     return manager.get_host_resource_usage(PROM_URL)
+
+
+# 유휴 리소스 정리
+@app.get("/api/cleanup-list")
+async def get_cleanup_list():
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        # 현재 DB에 기록된 모든 인스턴스 ID 리스트 추출
+        db_ids = [row[0] for row in conn.execute("SELECT instance_id FROM instances").fetchall()]
+        conn.close()
+        
+        # 드라이버를 통해 정리 대상 필터링
+        return manager.get_cleanup_candidates(db_ids)
+    except Exception as e:
+        print(f"❌ Cleanup API Error: {traceback.format_exc()}")
+        raise HTTPException(status_code=500, detail=str(e))
