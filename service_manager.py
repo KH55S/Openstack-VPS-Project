@@ -38,4 +38,4 @@ def register_new_user(username):
 
 
 if __name__ == "__main__":
-    register_new_user("Ansible-User")
+    register_new_user("InfraTeam_VDI")
