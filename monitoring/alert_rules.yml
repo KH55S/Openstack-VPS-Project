@@ -1,0 +1,58 @@
+groups:
+  - name: HostResourceAlerts
+    rules:
+      - alert: HostMemoryWarning
+        expr: (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100 > 80
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "호스트 메모리 주의"
+          description: "현재 메모리 사용량 : {{ $value | printf \"%.2f\" }}%"
+
+      - alert: HostMemoryDanger
+        expr: (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100 > 90
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "호스트 메모리 고갈 위기"
+          description: "현재 메모리 사용량 : {{ $value | printf \"%.2f\" }}%"
+  
+      - alert: HostDiskSpaceDanger
+        expr: (node_filesystem_avail_bytes{mountpoint="/"} / node_filesystem_size_bytes{mountpoint="/"}) * 100 < 10
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "디스크 용량 고갈 위기"
+          description: "루트 파티션의 남은 용량 10% 미만"
+
+      - alert: HostHighLoad
+        expr: node_load1 > (count by(instance) (node_cpu_seconds_total{mode="idle"}) * 1.5)
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "시스템 부하 지수 상승"
+          description: "현재 시스템 Load({{ $value }})가 코어 수 대비 높음. 처리 속도 저하 위험."
+
+      - alert: MonitoringExporterDown
+        expr: up{job="node-exporter"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "모니터링 에이전트 중단"
+          description: "대상({{ $labels.job }})이 응답하지 않음. 데이터 수집이 중단되었습니다."
+
+  - name: OpenStackAlerts
+    rules:
+      - alert: OpenStackServiceDown
+        expr: openstack_compute_service_state == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "오픈스택 서비스 장애"
+          description: "서비스({{ $labels.service }}) 상태 DOWN." 
