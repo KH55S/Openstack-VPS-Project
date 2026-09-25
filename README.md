@@ -1,10 +1,10 @@
 # ☁️ HS-Cloud: Kolla-Ansible OpenStack 기반 프라이빗 클라우드 자동화 플랫폼
 
-**`HS-Cloud`**는 서비스 개발 목적이 아닌, **오픈스택(OpenStack)의 내부 작동 원리 파악**과 **인프라 자동화 역량 확보**를 위해 구축된 개인형 프라이빗 클라우드 포털입니다. 노트북이라는 제한된 리소스 환경에서 **Kolla-Ansible**을 통해 컨테이너 기반 인프라를 배포하고, 인스턴스의 생명주기(Provisioning-Configuration-Cleanup)를 소프트웨어적으로 자동화하여 수동 작업을 줄였습니다.
+`HS-Cloud`는 서비스 개발 목적이 아닌, **오픈스택(OpenStack)의 내부 작동 원리 파악**과 **인프라 자동화 역량 확보**를 위해 구축된 개인형 프라이빗 클라우드 포털입니다. 노트북이라는 제한된 리소스 환경에서 **Kolla-Ansible**을 통해 컨테이너 기반 인프라를 배포하고, 인스턴스의 생명주기(Provisioning-Configuration-Cleanup)를 소프트웨어적으로 자동화하여 수동 작업을 줄였습니다.
 
 ---
 - **특정 프로젝트에서 인스턴스 생성 및 모니터링**
-- 
+ 
 ![infra 프로젝트에서 인스턴스 생성](https://github.com/user-attachments/assets/38a0ef41-697d-441e-8d4d-9e99c1e57890)
 
 ---
