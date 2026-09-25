@@ -4,6 +4,7 @@ services:
     container_name: hcloud-portal
     network_mode: "host"
     volumes:
+      - ./index.html:/app/index.html
       - ./cloud_portal.db:/app/cloud_portal.db
       - ~/.config/openstack:/root/.config/openstack:ro
       - ./user_keys:/app/user_keys # 앤서블이 인스턴스에 접속할 수 있도록 키 폴더 볼륨 연결
