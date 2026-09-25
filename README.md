@@ -4,13 +4,21 @@
 
 ---
 - **특정 프로젝트에서 인스턴스 생성 및 모니터링**
-![Image](https://github.com/user-attachments/assets/f6ca439a-6973-41ab-a518-fc1a43b29033)
+- 
+![infra 프로젝트에서 인스턴스 생성](https://github.com/user-attachments/assets/38a0ef41-697d-441e-8d4d-9e99c1e57890)
+
 ---
 - **사용하지 않는 인스턴스 회수**
+
 ![Image](https://github.com/user-attachments/assets/4c910f01-80c8-4c4e-af53-a5c41c676f4f)
 ---
 - **오픈스택이 설치된 호스트 모니터링**
+
 ![Image](https://github.com/user-attachments/assets/c752b48d-c00f-4f4b-9d87-bac9d5caaec0)
+---
+- **외부에서 인스턴스 SSH 접속**
+
+![외부접속](https://github.com/user-attachments/assets/5aafe867-e09d-4b46-8b4d-62898f2bdf9e)
 ---
 
 ##  프로젝트 목적
@@ -106,7 +114,7 @@ ssh -i [본인_키_이름].pem ubuntu@192.168.35.xxx
 * **회수 기능** : 회수 버튼을 눌러 오픈스택 자원을 삭제합니다.
 ---
 ### 3. 멀티 테넌트 뷰 (멀티 테넌트 필터)
-<img width="1199" alt="멀티 테넌트 뷰" src="https://github.com/user-attachments/assets/8c7536db-c330-4fdd-b9d6-cfb4c5f9a753" />
+<img width="1134" height="875" alt="스크린샷 2026-04-08 114554" src="https://github.com/user-attachments/assets/4fbaf423-1c17-43b4-8573-476425e2bbf2" />
 
 * 프로젝트(사용자)별로 인스턴스 현황을 나눠서 조회할 수 있습니다.
 ---
