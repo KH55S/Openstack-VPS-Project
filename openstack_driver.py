@@ -361,7 +361,7 @@ class OpenStackManager:
             # 오픈스택의 생성 시간 파싱 (보통 ISO 형식)
             # '2026-03-07T08:47:09Z' -> datetime 객체로 변환
             created_at = datetime.fromisoformat(raw_time.replace('Z', '+00:00'))
-            is_old = (now - created_at) > timedelta(hours=1)
+            is_old = (now - created_at) > timedelta(hours=12)
             is_orphaned = server.id not in db_instance_ids
             
             if is_old or is_orphaned: # (인스턴스) DB에 없거나 | 생성된지 오래 됐거나
